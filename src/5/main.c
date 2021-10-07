@@ -61,37 +61,24 @@ static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART2_UART_Init(void);
 
-#define tV_25   0.76f
-#define tSlope  0.0025f
-#define Vref    3.3f
+#define v_25   		0.76f
+#define avg_slope  	0.0025f
+#define v_ref    	3.3f
 
-uint16_t Result=0;
+uint32_t result = 0;
 float temp;
+
 uint8_t rx_data[1024];
 
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
@@ -103,10 +90,12 @@ int main(void)
 //  {
 //	  HAL_Delay(1000);
 //	  HAL_ADC_Start(&hadc1);
+//
 //	  if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK){
-//		  Result = HAL_ADC_GetValue(&hadc1);
-//		  temp = (float) Result/4096*Vref;
-//		  temp = (temp - tV_25)/tSlope + 25;
+//
+//		  result = HAL_ADC_GetValue(&hadc1);
+//		  temp = (float) result / 4096 * v_ref;
+//		  temp = (temp - v_25) / avg_slope + 25;
 //
 //		  uint8_t temp_label[] = "temp adc is ";
 //		  uint8_t tx_data[4];
@@ -118,7 +107,6 @@ int main(void)
 //		  memcpy(send_data + sizeof(temp_label) - 1, &tx_data, sizeof(tx_data));
 //		  send_data[18] = '\r';
 //		  send_data[19] = '\n';
-//
 //
 //		  HAL_StatusTypeDef result = HAL_UART_Transmit_DMA(&huart2, send_data, sizeof(send_data));
 //		  if (result != HAL_OK){
@@ -133,11 +121,12 @@ int main(void)
 
 
   /*send with adc dma*/
-  HAL_ADC_Start_DMA(&hadc1, &Result, sizeof(Result));
+  HAL_ADC_Start_DMA(&hadc1, &result, 1);
 
   while(1){
 
 	  HAL_Delay(1000);
+	  int a = 5;
   }
 
   /*end adc dma*/
@@ -145,58 +134,31 @@ int main(void)
 
 }
 
-void ADC_DMAConvCplt(DMA_HandleTypeDef *hdma){
-	if (hdma == &hdma_adc1){
-		temp = (float) Result/4096*Vref;
-		temp = (temp - tV_25)/tSlope + 25;
-
-		uint8_t temp_label[] = "temp adc is ";
-		uint8_t tx_data[4];
-		sprintf(tx_data, "%u", (uint32_t)temp);
-
-		uint8_t send_data[20];
-		memset(send_data, 0, sizeof(send_data));
-		memcpy(send_data, temp_label, sizeof(temp_label));
-		memcpy(send_data + sizeof(temp_label) - 1, &tx_data, sizeof(tx_data));
-		send_data[18] = '\r';
-		send_data[19] = '\n';
-
-		HAL_StatusTypeDef result = HAL_UART_Transmit_DMA(&huart2, send_data, sizeof(send_data));
-		if (result != HAL_OK){
-			int a = 5;
-		}
-
-		HAL_ADC_Stop_DMA(&hadc1);
-
-		HAL_ADC_Start_DMA(&hadc1, &Result, sizeof(Result));
-
-	}
-}
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 	if (hadc == &hadc1){
-		temp = (float) Result/4096*Vref;
-		temp = (temp - tV_25)/tSlope + 25;
+		  temp = (float) result / 4096 * v_ref;
+		  temp = (temp - v_25) / avg_slope + 25;
 
-		uint8_t temp_label[] = "temp adc is ";
-		uint8_t tx_data[4];
-		sprintf(tx_data, "%u", (uint32_t)temp);
+		  uint8_t temp_label[] = "temp adc is ";
+		  uint8_t tx_data[4];
+		  sprintf(tx_data, "%u", (uint32_t)temp);
 
-		uint8_t send_data[20];
-		memset(send_data, 0, sizeof(send_data));
-		memcpy(send_data, temp_label, sizeof(temp_label));
-		memcpy(send_data + sizeof(temp_label) - 1, &tx_data, sizeof(tx_data));
-		send_data[18] = '\r';
-		send_data[19] = '\n';
+		  uint8_t send_data[20];
+		  memset(send_data, 0, sizeof(send_data));
+		  memcpy(send_data, temp_label, sizeof(temp_label));
+		  memcpy(send_data + sizeof(temp_label) - 1, &tx_data, sizeof(tx_data));
+		  send_data[18] = '\r';
+		  send_data[19] = '\n';
 
-		HAL_StatusTypeDef result = HAL_UART_Transmit_DMA(&huart2, send_data, sizeof(send_data));
-		if (result != HAL_OK){
-			int a = 5;
-		}
+		  HAL_StatusTypeDef result = HAL_UART_Transmit_DMA(&huart2, send_data, sizeof(send_data));
+		  if (result != HAL_OK){
+			  int a = 5;
+		  }
 
-		HAL_ADC_Stop_DMA(&hadc1);
-
-		HAL_ADC_Start_DMA(&hadc1, &Result, sizeof(Result));
+//		HAL_ADC_Stop_DMA(&hadc1);
+//
+//		HAL_ADC_Start_DMA(&hadc1, &result, 1);
 	}
 }
 
