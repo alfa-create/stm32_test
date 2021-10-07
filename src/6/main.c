@@ -55,20 +55,61 @@ int main(void)
 
   while (1)
   {
+	  /*temperature*/
 	  status = HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDR, MEASURE_TEMP, I2C_MEMADD_SIZE_8BIT, (uint8_t*)rx_data, 2, 1000);
 
 	  uint16_t temp_raw = ((uint16_t)(rx_data[0] << 8) | (rx_data[1]));
 	  float temp = (float)(temp_raw * 175.12 / 65536) - 46.85;
 
+	  uint8_t temp_label[] = "temp sen is ";
+	  uint8_t tx_data[4];
+	  sprintf(tx_data, "%u", (uint32_t)temp);
+
+	  uint8_t send_data[20];
+	  memset(send_data, 0, sizeof(send_data));
+	  memcpy(send_data, temp_label, sizeof(temp_label));
+	  memcpy(send_data + sizeof(temp_label) - 1, &tx_data, sizeof(tx_data));
+	  send_data[18] = '\r';
+	  send_data[19] = '\n';
+
+	  HAL_StatusTypeDef result = HAL_UART_Transmit_DMA(&huart2, send_data, sizeof(send_data));
+	  if (result != HAL_OK){
+		  int a = 5;
+	  }
+	  HAL_Delay(500);
+	  /*humidity*/
 	  status = HAL_I2C_Mem_Read(&hi2c1, SENSOR_ADDR, MEASURE_HUMIDITY, I2C_MEMADD_SIZE_8BIT, (uint8_t*)rx_data, 2, 1000);
 
 	  uint16_t humidity_raw = ((uint16_t)(rx_data[0] << 8) | (rx_data[1]));
 	  float humidity = (float)(temp_raw * 125 / 65536) - 6;
 
-	  HAL_Delay(1000);
+	  uint8_t hum_label[] = "hum sen is ";
+	  sprintf(tx_data, "%u", (uint32_t)humidity);
+	  memset(send_data, 0, sizeof(send_data));
+	  memcpy(send_data, hum_label, sizeof(hum_label));
+	  memcpy(send_data + sizeof(hum_label) - 1, &tx_data, sizeof(tx_data));
+	  send_data[18] = '\r';
+	  send_data[19] = '\n';
+
+	 result = HAL_UART_Transmit_DMA(&huart2, send_data, sizeof(send_data));
+	 if (result != HAL_OK){
+		 int a = 5;
+	 }
+
+	  HAL_Delay(500);
   }
 
 
+}
+
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	if (huart == &huart2){
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+		for (int i = 0; i < 100000; i++);
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+		for (int i = 0; i < 100000; i++);
+	}
 }
 
 /**
