@@ -1,0 +1,3 @@
+work with sd 1 bit
++ dma sdio
++ pull-up sdio_d0 sdio_ck
