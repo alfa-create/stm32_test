@@ -12,4 +12,7 @@
 - [ ] 9 - Реализация файловой системы
 	- [X] 9.1 - SDIO (внешняя sd-card)
 	- [ ] 9.2 - SPI Flash
+
+- [ ] 10 - USB
+	- [X] 10.1 - USB MASS STORAGE (flash)
 ---
